@@ -14,6 +14,10 @@ class RobotCommunicator:
         self.odom = np.zeros((self.number_of_robots, 3))
         self.vel = np.zeros((self.number_of_robots, 3))
 
+        # set maximum values
+        self.max_acc = 1
+        self.max_vel = 2
+
         rospy.init_node("robot_communicator")
 
         self.pub = [None] * self.number_of_robots
