@@ -1,0 +1,12 @@
+# main behavior parameters
+coeff_sep: 4
+coeff_ali: 1
+coeff_coh: 1
+
+# controller parameters
+max_vel: 4
+max_acc: 2
+
+# obstacle avoidance parameters
+fov: 45
+max_see_ahead: 1
