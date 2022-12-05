@@ -1,12 +1,21 @@
 # main behavior parameters
-coeff_sep: 4
-coeff_ali: 1
-coeff_coh: 1
+coeff_sep: 30
+coeff_ali: 4
+coeff_coh: 6
 
 # controller parameters
-max_vel: 4
-max_acc: 2
+max_vel: 8
+max_acc: 1
 
 # obstacle avoidance parameters
-fov: 45
-max_see_ahead: 1
+fov: 60
+max_see_ahead: 0.2
+avoidance_coeff: 100
+
+# roaming parameters
+roaming_coeff: 3
+slowing_speed: 3
+slowing_distance: 2
+
+# neighborhood radius
+neighbors_radius: 0.5

@@ -31,8 +31,8 @@ class SwarmRobots:
         self.coeff_coh = rospy.get_param("~coeff_coh")
         self.coeff_ali = rospy.get_param("~coeff_ali")
 
-        self.slowing_distance = 0.5
-        self.slowing_speed = 0.1
+        self.slowing_distance = rospy.get_param("~slowing_distance")
+        self.slowing_speed = rospy.get_param("~slowing_speed")
 
         self.cmd_pub = [None] * self.num_robots
         self.odom_sub =  [None] * self.num_robots
@@ -41,13 +41,18 @@ class SwarmRobots:
         self.vel = np.zeros((self.num_robots, 3))
 
         # THIS VALUE NEEDS TO BE CHANGED
-        self.dt = 0.1
+        self.dt = 0.03
 
         # set maximum values
         self.max_acc = rospy.get_param("~max_acc")
         self.max_vel = rospy.get_param("~max_vel")
         self.fov = rospy.get_param("~fov")
         self.max_see_ahead = rospy.get_param("~max_see_ahead")
+
+        # set more parameters
+        self.roaming_coeff = rospy.get_param("~roaming_coeff")
+        self.avoidance_coeff = rospy.get_param("~avoidance_coeff")
+        self.neighbors_radius = rospy.get_param("~neighbors_radius")
 
         self.oa = ObstacleAvoidance(r=self.num_robots, fov=self.fov, max_see_ahead=self.max_see_ahead)
         self.behaviors = Behaviors(self.num_robots, self.max_acc, self.max_vel)
@@ -70,7 +75,8 @@ class SwarmRobots:
             self.odom_sub[r] = rospy.Subscriber(self.ns_prefix+"_{}".format(str(r))+odom_topic, Odometry, self.odom_callback, (r))
 
         self.gridmap_sub = rospy.Subscriber(gridmap_topic, OccupancyGrid, self.get_gridmap)
-        self.move_goal_sub = rospy.Subscriber('/move_base_simple/goal', PoseStamped, self.get_goal)  
+        self.move_goal_sub = rospy.Subscriber('/move_base_simple/goal', PoseStamped, self.get_goal)
+        self.roaming_acc = np.zeros((self.num_robots, 3))
         
         # velocity controller timer
         rospy.Timer(rospy.Duration(0.05), self.controller)
@@ -100,40 +106,22 @@ class SwarmRobots:
     # main velocity controller
     def controller(self, event):
 
-        # # get roaming velocities, NEED TO ADD PARAMETERS
-        # if self.goal is not None:
-        #     self.vel[:,0:2] = 2*self.roaming.arrival(self.pose[:,0:2], self.goal, self.vel[:,0:2], self.slowing_speed, self.slowing_distance)*self.dt
-
-        # # get neighbors list for each robot, NEED TO ADD RADIUS PARAMETERS
-        # neighbors_list, vel_list = fov.circle_fov(self.pose, self.vel, self.num_robots, 0.5)
-
-        # # get the acceleration of the three main behaviors
-        # self.combined_acc = self.behaviors.seperation(self.pose, neighbors_list, self.coeff_sep) + self.behaviors.cohesion(self.pose, neighbors_list, self.coeff_coh) + self.behaviors.alignment(self.vel, vel_list, self.coeff_ali)
-        # self.vel = self.combined_acc*self.dt + self.vel
-
-        # # obstacle avoidance
-        # self.vel_norm = self.dt*self.vel
-        # avoidance_force = self.oa.look_ahead(self.pose[:,0:2], self.vel_norm)
-        # self.vel[:,0:2] = self.vel[:,0:2] + 6*avoidance_force
-
         # get roaming velocities, NEED TO ADD PARAMETERS
-        roaming_acc = np.zeros((self.num_robots, 3))
         if self.goal is not None:
-            roaming_acc = np.concatenate((self.roaming.arrival(self.pose[:,0:2], self.goal, self.vel[:,0:2], self.slowing_speed, self.slowing_distance), np.zeros((self.num_robots, 1))), axis=1)
+            self.roaming_acc = self.roaming.arrival(self.pose[:,0:2], self.goal, self.vel[:,0:2], self.slowing_speed, self.slowing_distance)
+            self.roaming_acc = np.concatenate((self.roaming_acc, np.zeros((self.num_robots, 1))), axis=1)
 
         # get neighbors list for each robot, NEED TO ADD RADIUS PARAMETERS
-        neighbors_list, vel_list = fov.circle_fov(self.pose, self.vel, self.num_robots, 0.3)
+        neighbors_list, vel_list = fov.circle_fov(self.pose, self.vel, self.num_robots, self.neighbors_radius)
 
         # get the acceleration of the three main behaviors
-        self.combined_acc = self.behaviors.seperation(self.pose, neighbors_list, self.coeff_sep) + self.behaviors.cohesion(self.pose, neighbors_list, self.coeff_coh) + self.behaviors.alignment(self.vel, vel_list, self.coeff_ali)
-
-        # final acceleration
-        self.vel = (roaming_acc + self.combined_acc)*self.dt + self.vel
+        self.combined_acc = self.roaming_coeff*self.roaming_acc + self.behaviors.seperation(self.pose, neighbors_list, self.coeff_sep) + self.behaviors.cohesion(self.pose, neighbors_list, self.coeff_coh) + self.behaviors.alignment(self.vel, vel_list, self.coeff_ali)
+        self.vel = self.combined_acc*self.dt + self.vel
 
         # obstacle avoidance
-        # self.vel_norm = self.dt*self.vel
-        # avoidance_force = np.concatenate((self.oa.look_ahead(self.pose[:,0:2], self.vel), np.zeros((self.num_robots, 1))), axis=1)
-        # self.vel = self.vel + avoidance_force
+        self.vel_norm = self.dt*self.vel
+        avoidance_force = self.oa.look_ahead(self.pose[:,0:2], self.vel_norm)
+        self.vel[:,0:2] = self.vel[:,0:2] + self.avoidance_coeff*avoidance_force
 
         for r in range(self.num_robots):
             v = self.vel[r,0]
