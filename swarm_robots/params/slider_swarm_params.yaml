@@ -1,0 +1,42 @@
+coeff_sep:
+    type: std_msgs/Float32
+    coeff_sep:
+        to: data
+        min: 0.5
+        max: 50
+        default: 30
+coeff_ali:
+    type: std_msgs/Float32
+    coeff_ali:
+        to: data
+        min: 0.5
+        max: 50
+        default: 4
+coeff_coh:
+    type: std_msgs/Float32
+    coeff_coh:
+        to: data
+        min: 0.5
+        max: 50
+        default: 6
+avoidance_coeff:
+    type: std_msgs/Float32
+    avoidance_coeff:
+        to: data
+        min: 0.5
+        max: 150
+        default: 100
+roaming_coeff:
+    type: std_msgs/Float32
+    roaming_coeff:
+        to: data
+        min: 0.5
+        max: 50
+        default: 3
+neighbors_radius:
+    type: std_msgs/Float32
+    neighbors_radius:
+        to: data
+        min: 0.1
+        max: 3
+        default: 0.5

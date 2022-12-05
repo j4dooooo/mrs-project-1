@@ -6,9 +6,10 @@ import rospy
 import tf
 
 from geometry_msgs.msg import Twist
+from geometry_msgs.msg import PoseStamped
 from nav_msgs.msg import Odometry
 from nav_msgs.msg import OccupancyGrid
-from geometry_msgs.msg import PoseStamped
+from std_msgs.msg import Float32
 
 import utils.fov as fov
 
@@ -26,13 +27,31 @@ class SwarmRobots:
 
         self.odom = np.zeros((self.num_robots, 3))
         self.cmd_vel = np.zeros((self.num_robots, 3))
-
+        
+        # set more parameters
         self.coeff_sep = rospy.get_param("~coeff_sep")
         self.coeff_coh = rospy.get_param("~coeff_coh")
         self.coeff_ali = rospy.get_param("~coeff_ali")
+        self.roaming_coeff = rospy.get_param("~roaming_coeff")
+        self.avoidance_coeff = rospy.get_param("~avoidance_coeff")
+        self.neighbors_radius = rospy.get_param("~neighbors_radius")
 
+        self.sub_coeff_sep = rospy.Subscriber("/coeff_sep", Float32, self.callback_coeff_sep)
+        self.sub_coeff_coh = rospy.Subscriber("/coeff_coh", Float32, self.callback_coeff_coh)
+        self.sub_coeff_ali = rospy.Subscriber("/coeff_ali", Float32, self.callback_coeff_ali)
+        self.sub_roaming_coeff = rospy.Subscriber("/roaming_coeff", Float32, self.callback_roaming_coeff)
+        self.sub_avoidance_coeff = rospy.Subscriber("/avoidance_coeff", Float32, self.callback_avoidance_coeff)
+        self.sub_neighbors_radius = rospy.Subscriber("/neighbors_radius", Float32, self.callback_neighbors_radius)
+
+        # roaming
         self.slowing_distance = rospy.get_param("~slowing_distance")
         self.slowing_speed = rospy.get_param("~slowing_speed")
+
+        # set maximum values
+        self.max_acc = rospy.get_param("~max_acc")
+        self.max_vel = rospy.get_param("~max_vel")
+        self.fov = rospy.get_param("~fov")
+        self.max_see_ahead = rospy.get_param("~max_see_ahead")
 
         self.cmd_pub = [None] * self.num_robots
         self.odom_sub =  [None] * self.num_robots
@@ -42,17 +61,6 @@ class SwarmRobots:
 
         # THIS VALUE NEEDS TO BE CHANGED
         self.dt = 0.03
-
-        # set maximum values
-        self.max_acc = rospy.get_param("~max_acc")
-        self.max_vel = rospy.get_param("~max_vel")
-        self.fov = rospy.get_param("~fov")
-        self.max_see_ahead = rospy.get_param("~max_see_ahead")
-
-        # set more parameters
-        self.roaming_coeff = rospy.get_param("~roaming_coeff")
-        self.avoidance_coeff = rospy.get_param("~avoidance_coeff")
-        self.neighbors_radius = rospy.get_param("~neighbors_radius")
 
         self.oa = ObstacleAvoidance(r=self.num_robots, fov=self.fov, max_see_ahead=self.max_see_ahead)
         self.behaviors = Behaviors(self.num_robots, self.max_acc, self.max_vel)
@@ -80,6 +88,24 @@ class SwarmRobots:
         
         # velocity controller timer
         rospy.Timer(rospy.Duration(0.05), self.controller)
+
+    def callback_coeff_sep(self, data):
+        self.coeff_sep = data.data
+
+    def callback_coeff_coh(self, data):
+        self.coeff_coh = data.data
+
+    def callback_coeff_ali(self, data):
+        self.coeff_ali = data.data
+
+    def callback_roaming_coeff(self, data):
+        self.roaming_coeff = data.data
+
+    def callback_avoidance_coeff(self, data):
+        self.avoidance_coeff = data.data
+
+    def callback_neighbors_radius(self, data):
+        self.neighbors_radius = data.data
     
     # odometry callback gets the current robot pose and stores it in self.pose
     def odom_callback(self, odom, r):
