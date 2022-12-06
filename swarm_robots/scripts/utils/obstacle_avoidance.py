@@ -89,7 +89,7 @@ class ObstacleAvoidance:
                     else:
                         self.avoidance_vector = np.zeros((self.num_robots, 2))
 
-            return self.avoidance_vector
+        return self.avoidance_vector
 
     # given a pose, should return True if not in collision, otherwise it should return False
     def is_valid(self, pose):

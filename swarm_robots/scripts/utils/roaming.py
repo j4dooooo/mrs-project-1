@@ -72,6 +72,6 @@ class Roaming:
         
         # if we are close to the goal, we nullify the desired velocity 
         else:
-            steering_velocity = np.zeros(2)
+            steering_velocity = np.zeros((position.shape[0], position.shape[1]))
         
         return steering_velocity
