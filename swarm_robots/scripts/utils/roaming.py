@@ -53,7 +53,7 @@ class Roaming:
         distance = np.linalg.norm(offset)
         
         # if we are not very close to the target
-        if distance > 1:
+        if distance > 3:
             
             # normalize the desired velocity vector
             desired_velocity = (offset/np.linalg.norm(offset, axis=1)[:,None])

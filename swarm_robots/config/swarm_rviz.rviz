@@ -7,6 +7,10 @@ Panels:
         - /Global Options1
         - /Status1
         - /Map1
+        - /Marker1
+        - /Marker2
+        - /Marker3
+        - /Marker4
       Splitter Ratio: 0.5
     Tree Height: 549
   - Class: rviz/Selection
@@ -61,6 +65,38 @@ Visualization Manager:
       Topic: /map
       Unreliable: false
       Use Timestamp: false
+      Value: true
+    - Class: rviz/Marker
+      Enabled: true
+      Marker Topic: /pose_agent
+      Name: Marker
+      Namespaces:
+        {}
+      Queue Size: 100
+      Value: true
+    - Class: rviz/Marker
+      Enabled: true
+      Marker Topic: /pose_flock
+      Name: Marker
+      Namespaces:
+        {}
+      Queue Size: 100
+      Value: true
+    - Class: rviz/Marker
+      Enabled: true
+      Marker Topic: /pose_goal
+      Name: Marker
+      Namespaces:
+        {}
+      Queue Size: 100
+      Value: true
+    - Class: rviz/Marker
+      Enabled: true
+      Marker Topic: /pose_neighbors
+      Name: Marker
+      Namespaces:
+        {}
+      Queue Size: 100
       Value: true
   Enabled: true
   Global Options:
@@ -126,5 +162,5 @@ Window Geometry:
   Views:
     collapsed: false
   Width: 1200
-  X: 206
-  Y: 95
+  X: 637
+  Y: 87

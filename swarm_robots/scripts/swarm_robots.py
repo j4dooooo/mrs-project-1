@@ -10,8 +10,10 @@ from geometry_msgs.msg import PoseStamped
 from nav_msgs.msg import Odometry
 from nav_msgs.msg import OccupancyGrid
 from std_msgs.msg import Float32
+from visualization_msgs.msg import Marker
 
 import utils.fov as fov
+import utils.visualization_functions as utilsFunc
 
 from utils.behaviors import Behaviors
 from utils.obstacle_avoidance import ObstacleAvoidance
@@ -42,6 +44,12 @@ class SwarmRobots:
         self.sub_roaming_coeff = rospy.Subscriber("/roaming_coeff", Float32, self.callback_roaming_coeff)
         self.sub_avoidance_coeff = rospy.Subscriber("/avoidance_coeff", Float32, self.callback_avoidance_coeff)
         self.sub_neighbors_radius = rospy.Subscriber("/neighbors_radius", Float32, self.callback_neighbors_radius)
+
+        # publishers to visualize results
+        self.publish_neighbors = rospy.Publisher('pose_neighbors', Marker, queue_size=2)
+        self.publish_flock = rospy.Publisher('pose_flock', Marker, queue_size=2)
+        self.publish_agent = rospy.Publisher('pose_agent', Marker, queue_size=2)
+        self.publish_goal = rospy.Publisher('pose_goal', Marker, queue_size=2)
 
         # roaming
         self.slowing_distance = rospy.get_param("~slowing_distance")
@@ -119,6 +127,7 @@ class SwarmRobots:
         if self.oa.there_is_map:
             print("New goal received: ({}, {})".format(goal.pose.position.x, goal.pose.position.y))
             self.goal = np.array([goal.pose.position.x, goal.pose.position.y])
+            utilsFunc.publish_goal(self.goal, self.publish_goal)
              
     def get_gridmap(self, gridmap):
         if (gridmap.header.stamp - self.last_map_time).to_sec() > 0.5:
@@ -138,7 +147,7 @@ class SwarmRobots:
             self.roaming_acc = np.concatenate((self.roaming_acc, np.zeros((self.num_robots, 1))), axis=1)
 
         # get neighbors list for each robot, NEED TO ADD RADIUS PARAMETERS
-        neighbors_list, vel_list = fov.circle_fov(self.pose, self.vel, self.num_robots, self.neighbors_radius)
+        neighbors_list, vel_list, no_neighbors_list = fov.circle_fov(self.pose, self.vel, self.num_robots, self.neighbors_radius)
 
         # get the acceleration of the three main behaviors
         self.combined_acc = self.roaming_coeff*self.roaming_acc + self.behaviors.seperation(self.pose, neighbors_list, self.coeff_sep) + self.behaviors.cohesion(self.pose, neighbors_list, self.coeff_coh) + self.behaviors.alignment(self.vel, vel_list, self.coeff_ali)
@@ -148,6 +157,10 @@ class SwarmRobots:
         self.vel_norm = self.dt*self.vel
         avoidance_force = self.oa.look_ahead(self.pose[:,0:2], self.vel_norm)
         self.vel[:,0:2] = self.vel[:,0:2] + self.avoidance_coeff*avoidance_force
+
+        utilsFunc.publish_corners(no_neighbors_list[1], self.publish_flock, frame='map', color=(0.23, 0.33, 0.33, 1), scale=0.1)
+        utilsFunc.publish_corners(neighbors_list[1], self.publish_neighbors, frame='map', color=(0, 1, 0, 1))
+        utilsFunc.publish_agent(self.pose[1,:2], self.publish_agent, scale=self.neighbors_radius)
 
         for r in range(self.num_robots):
             v = self.vel[r,0]
