@@ -86,6 +86,12 @@ class ObstacleAvoidance:
                         self.avoidance_vector[i,1] =  self.ahead_l[i,1] - self.ahead_r[i,1]
                         self.avoidance_vector[i,:] = self.avoidance_vector[i,:]/np.linalg.norm(self.avoidance_vector[i,:])  if np.linalg.norm(self.avoidance_vector[i,:])!=0 else self.avoidance_vector[i,:]
 
+                    elif not self.is_valid(self.ahead[i,:]):
+                        choose = np.random.choice([0, 1])
+                        self.avoidance_vector[i,0] =  (self.ahead_l[i,0] if choose else self.ahead_r[i,0]) - self.ahead[i,0]
+                        self.avoidance_vector[i,1] =  (self.ahead_l[i,1] if choose else self.ahead_r[i,1]) - self.ahead[i,1]
+                        self.avoidance_vector[i,:] = self.avoidance_vector[i,:]/np.linalg.norm(self.avoidance_vector[i,:])  if np.linalg.norm(self.avoidance_vector[i,:])!=0 else self.avoidance_vector[i,:]
+
                     else:
                         self.avoidance_vector = np.zeros((self.num_robots, 2))
 
