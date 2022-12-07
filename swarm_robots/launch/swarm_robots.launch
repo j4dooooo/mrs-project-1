@@ -5,7 +5,7 @@
     <node name="velocity_gui" pkg="slider_publisher" type="slider_publisher" output="screen" respawn="true">
         <param name="file" value="$(find swarm_robots)/params/slider_swarm_params.yaml"/>
     </node>
-    <node pkg="swarm_robots" type="swarm_robots.py" name="swarm_robots"  output="screen" launch-prefix="bash -c 'sleep $(arg swarm_node_start_delay); $0 $@'">
+    <node pkg="swarm_robots" type="swarm_robots.py" name="swarm_robots" output="screen" launch-prefix="bash -c 'sleep $(arg swarm_node_start_delay); $0 $@'">
         <rosparam file="$(find swarm_robots)/params/swarm_params.yaml"/>
     </node>
 </launch>
