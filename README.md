@@ -18,9 +18,9 @@ When you run the code you will see an RViz window, along with the sliders and a 
 * Click on 2D Nav Goal, and choose roaming position (It is advised to do so at the start of the simulation as the separation force would become very big).
 
 ## Contributors
-* Jad Mansour
-* Bruk Gebregziabher
-* Ivan Changoluisa
-* Nafees Bin Zaman
+* [Jad Mansour](https://github.com/j4dooooo)
+* [Bruk Gebregziabher](https://github.com/brukg)
+* [Nafees Bin Zaman](https://github.com/NafBZ)
+* [Ivan Changoluisa](https://github.com/davidchangoluisa)
 * Sofie Rosler
 * Esra Hicret Uzer
